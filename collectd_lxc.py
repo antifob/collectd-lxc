@@ -92,14 +92,26 @@ def reader(input_data=None):
                     with open(os.path.join(metrics[user_id][container_name][metric], 'blkio.throttle.io_service_bytes'), 'r') as f:
                         lines = f.read()
 
-                    bytes_read = int(re.search("Read\s+(?P<read>[0-9]+)", lines).group("read"))
-                    bytes_write = int(re.search("Write\s+(?P<write>[0-9]+)", lines).group("write"))
+                    bytes_read = 0
+                    r = re.search("Read\s+(?P<read>[0-9]+)", lines)
+                    if r:
+                        bytes_read = int(r.group("read"))
+                    bytes_write = 0
+                    r = re.search("Write\s+(?P<write>[0-9]+)", lines)
+                    if r:
+                        bytes_write = int(r.group("write"))
 
                     with open(os.path.join(metrics[user_id][container_name][metric], 'blkio.throttle.io_serviced'), 'r') as f:
                         lines = f.read()
 
-                    ops_read = int(re.search("Read\s+(?P<read>[0-9]+)", lines).group("read"))
-                    ops_write = int(re.search("Write\s+(?P<write>[0-9]+)", lines).group("write"))
+                    ops_read = 0
+                    r = re.search("Read\s+(?P<read>[0-9]+)", lines)
+                    if r:
+                        ops_read = int(r.group("read"))
+                    ops_write = 0
+                    r = re.search("Write\s+(?P<write>[0-9]+)", lines)
+                    if r:
+                        ops_write = int(r.group("write"))
 
                     values = collectd.Values(plugin_instance=lxc_fullname,
                                              type="gauge", plugin="lxc_blkio")
@@ -116,6 +128,8 @@ def reader(input_data=None):
                     with open(os.path.join(metrics[user_id][container_name][metric], 'tasks'), 'r') as f:
                         # The first line is PID of container
                         container_PID = f.readline().rstrip()
+                        if not container_PID:
+                            continue
                         with Namespace(container_PID, 'net'):
                             # To read network metric in namespace, "open" method don't work with namespace
                             network_data = subprocess.check_output(['cat', '/proc/net/dev']).split("\n")
